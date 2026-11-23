@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf3e6">
+  <title>Adventskalender</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #fbf3e6;
+      --ink: #2a1917;
+      --red: #6c1d2c;
+      --muted: #583f3a;
+      --line: #ddc5b5;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 1rem/1.55 "Helvetica Neue", system-ui, sans-serif; }
+    main { max-width: 49rem; margin: auto; padding: 0 clamp(1rem, 5vw, 2.5rem); }
+    header { padding: clamp(3rem, 9vw, 6rem) 0 2.25rem; text-align: center; }
+    .heart, h1 em { color: var(--red); }
+    .heart { font-size: 1.25rem; }
+    h1, h2, .number { font-family: Georgia, serif; font-weight: normal; }
+    h1 { margin: .15em 0 .35em; font-size: clamp(2.65rem, 8vw, 4rem); line-height: 1.05; }
+    header p { margin: .65rem 0 0; color: var(--muted); }
+    h2 { margin: 0; font-size: 1.4rem; }
+    .calendar-heading, .dialog-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; margin-bottom: .75rem; }
+    #status { color: var(--muted); font-size: .875rem; }
+    .doors { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(.4rem, 1.7vw, .85rem); }
+    button { font: inherit; }
+    .door { display: grid; min-height: 4rem; aspect-ratio: 1 / 1.04; place-content: center; justify-items: center; gap: .35rem; background: #fffaf4; border: 1px solid var(--line); border-radius: .65rem; color: var(--ink); cursor: pointer; }
+    .number { font-size: clamp(1.45rem, 5vw, 2.4rem); line-height: 1; }
+    .door:disabled { color: var(--muted); background: #f5e8df; cursor: default; }
+    .door:not(:disabled):hover { border-color: var(--red); }
+    .door.today { background: var(--red); color: white; border-color: var(--red); }
+    .lock { width: .55rem; height: .46rem; border: 1px solid currentColor; border-radius: .1rem; position: relative; margin-top: .18rem; }
+    .lock::before { content: ""; position: absolute; bottom: 100%; inset-inline: .08rem; height: .21rem; border: 1px solid currentColor; border-bottom: 0; border-radius: 1rem 1rem 0 0; }
+    .mark { font-size: .72rem; line-height: 1; }
+    :focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+    footer { padding: 2rem 0 2.5rem; text-align: center; color: var(--muted); }
+    dialog { width: min(34rem, calc(100% - 2rem)); max-height: 88vh; max-height: 88dvh; padding: 1rem; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 1rem; }
+    dialog::backdrop { background: #291517b8; }
+    .dialog-heading { align-items: center; }
+    .pill { min-height: 44px; padding: .4rem .85rem; border: 1px solid var(--line); border-radius: 2rem; background: #fffaf4; color: var(--red); cursor: pointer; }
+    #photo { display: block; width: 100%; max-height: 60vh; object-fit: contain; background: #f1e0d6; border-radius: .7rem; }
+    #message { white-space: pre-wrap; overflow-wrap: anywhere; }
+    #photo-status { margin: 0; padding: 2rem .75rem; background: #f1e0d6; border-radius: .7rem; text-align: center; color: var(--muted); }
+    header p { white-space: pre-line; }
+    .login { max-width: 27rem; margin: clamp(3rem, 14vw, 8rem) auto; text-align: center; }
+    #login-form { display: grid; gap: .65rem; max-width: 20rem; margin: 1.5rem auto 0; text-align: left; }
+    #password { min-height: 44px; width: 100%; padding: .55rem .8rem; border: 1px solid var(--line); border-radius: .5rem; background: #fffaf4; color: var(--ink); font: inherit; }
+    #unlock { background: var(--red); color: white; }
+    #unlock:disabled { opacity: .65; }
+    #login-status { color: var(--muted); min-height: 1.55rem; margin: 0; }
+    @media (max-width: 560px) { .doors { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  </style>
+  <script src="kalender.js" defer></script>
+</head>
+<body>
+  <main>
+    <section id="login" class="login" aria-labelledby="login-title">
+      <div class="heart" aria-hidden="true">♥</div>
+      <h1 id="login-title">Dein Adventskalender</h1>
+      <form id="login-form">
+        <label for="password">Kalenderpasswort</label>
+        <input id="password" type="password" required autocomplete="current-password" autocapitalize="off" spellcheck="false">
+        <button class="pill" id="unlock" type="submit" disabled>Kalender öffnen</button>
+        <p id="login-status" role="status"></p>
+      </form>
+      <noscript>Aktiviere JavaScript, um den Kalender zu öffnen.</noscript>
+    </section>
+    <div id="calendar" hidden>
+      <header>
+        <div class="heart" aria-hidden="true">♥</div>
+        <h1>24 Tage<br><em>näher bei dir</em></h1>
+        <p id="intro-1"></p>
+        <p id="intro-2"></p>
+      </header>
+    <section aria-labelledby="calendar-title">
+      <div class="calendar-heading">
+        <h2 id="calendar-title" tabindex="-1">Türchen</h2>
+        <span id="status" role="status"></span>
+      </div>
+      <div class="doors" id="doors"></div>
+      <noscript>Aktiviere JavaScript, um die Türchen zu öffnen.</noscript>
+    </section>
+      <footer>
+        <p><span id="dedication"></span> <span aria-hidden="true">♡</span></p>
+        <button class="pill" id="lock-calendar" type="button">Kalender sperren</button>
+      </footer>
+    </div>
+  </main>
+  <dialog id="surprise" aria-labelledby="day-title">
+    <div class="dialog-heading">
+      <h2 id="day-title"></h2>
+      <form method="dialog"><button class="pill" autofocus>Schließen</button></form>
+    </div>
+    <img id="photo" alt="" hidden>
+    <p id="photo-status" role="status" hidden></p>
+  </dialog>
+</body>
+</html>
